@@ -1,0 +1,162 @@
+{
+  "saved_searches": [
+    {
+      "name": "API Errors",
+      "description": "All API service errors and exceptions",
+      "query": "container.name: bowery_api AND (level: error OR status: 5* OR message: *error*)",
+      "filters": [
+        {
+          "field": "container.name",
+          "value": "bowery_api"
+        },
+        {
+          "field": "level",
+          "value": "error"
+        }
+      ]
+    },
+    {
+      "name": "Rate Limiting Events",
+      "description": "Rate limiting and 429 responses",
+      "query": "message: *rate_limited* OR status: 429 OR message: *Too many requests*",
+      "filters": [
+        {
+          "field": "status",
+          "value": "429"
+        }
+      ]
+    },
+    {
+      "name": "Webhook Processing",
+      "description": "Webhook events and processing status",
+      "query": "message: *webhook* OR container.name: bowery_worker AND message: *webhook*",
+      "filters": [
+        {
+          "field": "container.name",
+          "value": "bowery_worker"
+        },
+        {
+          "field": "message",
+          "value": "*webhook*"
+        }
+      ]
+    },
+    {
+      "name": "Webhook DLQ",
+      "description": "Failed webhook events moved to dead letter queue",
+      "query": "message: *DLQ* OR message: *dead letter* OR status: dlq",
+      "filters": [
+        {
+          "field": "status",
+          "value": "dlq"
+        }
+      ]
+    },
+    {
+      "name": "Job Failures",
+      "description": "Failed BullMQ jobs and retry attempts",
+      "query": "container.name: bowery_worker AND (message: *failed* OR message: *error* OR level: error)",
+      "filters": [
+        {
+          "field": "container.name",
+          "value": "bowery_worker"
+        },
+        {
+          "field": "level",
+          "value": "error"
+        }
+      ]
+    },
+    {
+      "name": "Token Refresh Events",
+      "description": "OAuth token refresh attempts and failures",
+      "query": "message: *token* AND (message: *refresh* OR message: *expired* OR message: *401*)",
+      "filters": [
+        {
+          "field": "message",
+          "value": "*token*"
+        }
+      ]
+    },
+    {
+      "name": "Content Approval Workflow",
+      "description": "Content approval and publishing workflow events",
+      "query": "message: *content* AND (message: *approve* OR message: *schedule* OR message: *publish*)",
+      "filters": [
+        {
+          "field": "message",
+          "value": "*content*"
+        }
+      ]
+    },
+    {
+      "name": "Database Errors",
+      "description": "Database connection and query errors",
+      "query": "message: *database* OR message: *postgres* OR message: *connection* AND level: error",
+      "filters": [
+        {
+          "field": "level",
+          "value": "error"
+        }
+      ]
+    },
+    {
+      "name": "Redis Issues",
+      "description": "Redis connection and cache issues",
+      "query": "message: *redis* OR message: *cache* AND level: error",
+      "filters": [
+        {
+          "field": "level",
+          "value": "error"
+        }
+      ]
+    },
+    {
+      "name": "High Response Times",
+      "description": "API requests with high response times",
+      "query": "container.name: bowery_api AND (duration: >5000 OR message: *slow*)",
+      "filters": [
+        {
+          "field": "container.name",
+          "value": "bowery_api"
+        }
+      ]
+    }
+  ],
+  "dashboard_config": {
+    "title": "Agent Bowery - System Overview",
+    "panels": [
+      {
+        "title": "Error Rate by Service",
+        "type": "pie_chart",
+        "query": "level: error",
+        "group_by": "container.name"
+      },
+      {
+        "title": "API Response Times",
+        "type": "line_chart",
+        "query": "container.name: bowery_api",
+        "field": "duration",
+        "time_range": "1h"
+      },
+      {
+        "title": "Rate Limiting Events",
+        "type": "bar_chart",
+        "query": "status: 429",
+        "time_range": "24h"
+      },
+      {
+        "title": "Webhook Processing Status",
+        "type": "table",
+        "query": "message: *webhook*",
+        "fields": ["timestamp", "container.name", "message", "status"]
+      },
+      {
+        "title": "Job Queue Depth",
+        "type": "metric",
+        "query": "message: *queue* AND message: *depth*",
+        "field": "queue_depth"
+      }
+    ]
+  }
+}

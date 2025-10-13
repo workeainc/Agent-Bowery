@@ -1,0 +1,81 @@
+graph TD
+  subgraph Client
+    W[Web Dashboard]
+  end
+
+  subgraph API[NestJS API]
+    Ctrls[Controllers]
+    Mid[Middlewares]
+    Filt[HttpExceptionFilter]
+    SvcToken[TokenService]
+    SvcContentAd[ContentAdaptationService]
+    SvcContentAp[ContentApprovalService]
+    SvcPublish[PlatformPublishService]
+    SvcPlatform[PlatformService]
+    CliMeta[MetaClientService]
+    CliLinkedIn[LinkedInClientService]
+    SvcQueue[QueueService]
+  end
+
+  subgraph Worker[Worker]
+    WkrPublish[Publish Queue]
+    WkrWebhook[Webhook Queue]
+    Cron[Cron Sweeper]
+  end
+
+  subgraph Data
+    DB[(PostgreSQL)]
+    Redis[(Redis)]
+  end
+
+  subgraph Providers
+    Meta[Meta]
+    LinkedIn[LinkedIn]
+    Google[Google/GBP]
+    YouTube[YouTube]
+  end
+
+  W -->|REST| Ctrls
+  Ctrls --> Mid
+  Ctrls --> Filt
+  Ctrls --> SvcToken
+  Ctrls --> SvcContentAd
+  Ctrls --> SvcContentAp
+  Ctrls --> SvcPublish
+  Ctrls --> SvcPlatform
+  Ctrls --> SvcQueue
+
+  SvcToken <-->|cache| Redis
+  SvcToken -->|read/write| DB
+  SvcContentAp -->|store previews/approvals| DB
+  SvcPublish -->|content/schedules| DB
+  SvcPublish --> CliMeta
+  SvcPublish --> CliLinkedIn
+
+  SvcPlatform --> Meta
+  SvcPlatform --> LinkedIn
+  SvcPlatform --> Google
+  SvcPlatform --> YouTube
+
+  Ctrls -. webhooks .-> Meta
+  Ctrls -. webhooks .-> LinkedIn
+  Ctrls -. webhooks .-> Google
+  Ctrls -. webhooks .-> YouTube
+  Meta -->|Webhook POST| Ctrls
+  LinkedIn -->|Webhook POST| Ctrls
+  Google -->|Webhook POST| Ctrls
+  YouTube -->|Webhook POST| Ctrls
+
+  SvcQueue -->|enqueue publish/webhook| WkrPublish
+  SvcQueue -->|enqueue webhook| WkrWebhook
+
+  Cron -->|poll /content/schedules/due| Ctrls
+  Cron -->|enqueue publish| WkrPublish
+
+  WkrPublish -->|get token| Redis
+  WkrPublish -->|fallback| DB
+  WkrPublish -->|post media/content| Providers
+  WkrPublish -->|record outcome| DB
+
+  WkrWebhook -->|process events| DB
+

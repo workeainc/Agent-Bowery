@@ -1,0 +1,602 @@
+{
+  "info": {
+    "name": "Agent Bowery API",
+    "description": "Complete API collection for Agent Bowery social media management platform",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{jwt_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:44000",
+      "type": "string"
+    },
+    {
+      "key": "jwt_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "api_key",
+      "value": "test-api-key",
+      "type": "string"
+    },
+    {
+      "key": "content_item_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "idempotency_key",
+      "value": "{{$randomUUID}}",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Get Dev Token (Admin)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/dev-token?roles=admin",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "dev-token"],
+              "query": [
+                {
+                  "key": "roles",
+                  "value": "admin"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Dev Token (Editor)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/auth/dev-token?roles=editor",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "dev-token"],
+              "query": [
+                {
+                  "key": "roles",
+                  "value": "editor"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Content Management",
+      "item": [
+        {
+          "name": "Create Content",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotency_key}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Test Blog Post\",\n  \"type\": \"BLOG\",\n  \"status\": \"DRAFT\",\n  \"tags\": [\"test\", \"blog\"],\n  \"metadata\": {\n    \"author\": \"test-user\",\n    \"category\": \"technology\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/content",
+              "host": ["{{base_url}}"],
+              "path": ["content"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Content List",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/content?status=DRAFT&page=1&limit=20",
+              "host": ["{{base_url}}"],
+              "path": ["content"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "DRAFT"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Content Details",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/content/{{content_item_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["content", "{{content_item_id}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Content Version",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotency_key}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"body\": \"This is the main content body for the blog post. It contains all the detailed information and insights that readers will find valuable.\",\n  \"title\": \"Updated Blog Post Title\",\n  \"summary\": \"A brief summary of the blog post content\",\n  \"mediaUrls\": [\"https://example.com/image1.jpg\", \"https://example.com/video1.mp4\"],\n  \"metadata\": {\n    \"wordCount\": 150,\n    \"readingTime\": \"2 minutes\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/content/{{content_item_id}}/version",
+              "host": ["{{base_url}}"],
+              "path": ["content", "{{content_item_id}}", "version"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Set Current Version",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"versionId\": \"version_1234567890_abcdef\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/content/{{content_item_id}}/version/current",
+              "host": ["{{base_url}}"],
+              "path": ["content", "{{content_item_id}}", "version", "current"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Approve Content (with Previews)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotency_key}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approvedBy\": \"admin-user\",\n  \"notes\": \"Content approved for publishing\",\n  \"generatePreviews\": true,\n  \"platforms\": [\"FACEBOOK\", \"LINKEDIN\", \"YOUTUBE\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/content/{{content_item_id}}/approve",
+              "host": ["{{base_url}}"],
+              "path": ["content", "{{content_item_id}}", "approve"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Content Previews",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/content/{{content_item_id}}/previews",
+              "host": ["{{base_url}}"],
+              "path": ["content", "{{content_item_id}}", "previews"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Regenerate Previews",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platforms\": [\"FACEBOOK\", \"LINKEDIN\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/content/{{content_item_id}}/previews/regenerate",
+              "host": ["{{base_url}}"],
+              "path": ["content", "{{content_item_id}}", "previews", "regenerate"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Content Scheduling",
+      "item": [
+        {
+          "name": "Schedule Content",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{idempotency_key}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"FACEBOOK\",\n  \"scheduledAt\": \"2024-01-15T10:00:00Z\",\n  \"mediaUrls\": [\"https://example.com/image1.jpg\"],\n  \"adaptedContent\": {\n    \"text\": \"Adapted content for Facebook\",\n    \"hashtags\": [\"#socialmedia\", \"#marketing\"]\n  }\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/content/{{content_item_id}}/schedule",
+              "host": ["{{base_url}}"],
+              "path": ["content", "{{content_item_id}}", "schedule"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Due Schedules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/content/schedules/due",
+              "host": ["{{base_url}}"],
+              "path": ["content", "schedules", "due"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Content Schedules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/content/{{content_item_id}}/schedules",
+              "host": ["{{base_url}}"],
+              "path": ["content", "{{content_item_id}}", "schedules"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Content Adaptation",
+      "item": [
+        {
+          "name": "Adapt Content for Platform",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"platform\": \"FACEBOOK\",\n  \"mediaUrls\": [\"https://example.com/image1.jpg\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/content/{{content_item_id}}/adapt",
+              "host": ["{{base_url}}"],
+              "path": ["content", "{{content_item_id}}", "adapt"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Platform Rules",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/content/platforms",
+              "host": ["{{base_url}}"],
+              "path": ["content", "platforms"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "OAuth & Tokens",
+      "item": [
+        {
+          "name": "Start Meta OAuth",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/oauth/meta/start",
+              "host": ["{{base_url}}"],
+              "path": ["oauth", "meta", "start"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Meta OAuth Callback",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/oauth/meta/callback?code=test_code&state=test_state",
+              "host": ["{{base_url}}"],
+              "path": ["oauth", "meta", "callback"],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "test_code"
+                },
+                {
+                  "key": "state",
+                  "value": "test_state"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Save Dev Tokens",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/oauth/meta/dev-save",
+              "host": ["{{base_url}}"],
+              "path": ["oauth", "meta", "dev-save"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Token Status",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tokens/meta/status",
+              "host": ["{{base_url}}"],
+              "path": ["tokens", "meta", "status"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/tokens/meta/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["tokens", "meta", "refresh"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Webhooks",
+      "item": [
+        {
+          "name": "Meta Webhook Verification",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/webhooks/meta?hub.mode=subscribe&hub.verify_token=dev-token&hub.challenge=test_challenge",
+              "host": ["{{base_url}}"],
+              "path": ["webhooks", "meta"],
+              "query": [
+                {
+                  "key": "hub.mode",
+                  "value": "subscribe"
+                },
+                {
+                  "key": "hub.verify_token",
+                  "value": "dev-token"
+                },
+                {
+                  "key": "hub.challenge",
+                  "value": "test_challenge"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Meta Webhook Event",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-Hub-Signature-256",
+                "value": "sha256=test_signature"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"object\": \"page\",\n  \"entry\": [\n    {\n      \"id\": \"123\",\n      \"time\": 1640995200,\n      \"changes\": [\n        {\n          \"field\": \"feed\",\n          \"value\": {\n            \"item\": \"comment\",\n            \"verb\": \"add\"\n          }\n        }\n      ]\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/webhooks/meta",
+              "host": ["{{base_url}}"],
+              "path": ["webhooks", "meta"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Platform Publishing",
+      "item": [
+        {
+          "name": "Test Platform Connection",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/posts/meta/test",
+              "host": ["{{base_url}}"],
+              "path": ["posts", "meta", "test"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Ping Platform",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/posts/meta/ping",
+              "host": ["{{base_url}}"],
+              "path": ["posts", "meta", "ping"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Dry Run Publish",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Test post content\",\n  \"mediaUrls\": [\"https://example.com/image.jpg\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/posts/meta/dry-run",
+              "host": ["{{base_url}}"],
+              "path": ["posts", "meta", "dry-run"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "System",
+      "item": [
+        {
+          "name": "Health Check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": ["{{base_url}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Test Job (API Key Auth)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "X-API-KEY",
+                "value": "{{api_key}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"message\": \"Test job from Postman\",\n  \"timestamp\": \"{{$timestamp}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/jobs/test",
+              "host": ["{{base_url}}"],
+              "path": ["jobs", "test"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}

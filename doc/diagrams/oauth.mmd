@@ -1,0 +1,20 @@
+sequenceDiagram
+  participant User
+  participant Web as Web (Next.js)
+  participant API as API (NestJS)
+  participant Provider as OAuth Provider (Meta/LinkedIn/Google)
+  participant DB as Postgres
+
+  User->>Web: Click "Connect {provider}"
+  Web->>API: GET /oauth/:provider/start
+  API-->>Web: { redirectUrl, state }
+  Web->>Provider: Redirect user to consent screen
+  Provider-->>Web: Redirect back with code+state
+  Web->>API: GET /oauth/:provider/callback?code=...&state=...
+  API->>Provider: Exchange code for tokens
+  Provider-->>API: access_token (+refresh_token, expires_in)
+  API->>DB: upsert SocialAccount (org, platform, extId)
+  API->>DB: insert Token (encrypted access/refresh, expiry, scopes)
+  API-->>Web: { saved: true, has_access, has_refresh }
+
+

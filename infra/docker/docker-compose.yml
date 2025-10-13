@@ -1,0 +1,177 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: bowery_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: bowery
+      POSTGRES_PASSWORD: bowery
+      POSTGRES_DB: bowery
+    ports:
+      - "55432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bowery"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: bowery_redis
+    restart: unless-stopped
+    ports:
+      - "56379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.2
+    container_name: bowery_elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "19200:9200"
+    volumes:
+      - esdata:/usr/share/elasticsearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -s http://localhost:9200 >/dev/null"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.2
+    container_name: bowery_kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "55601:5601"
+    depends_on:
+      - elasticsearch
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.12.2
+    container_name: bowery_logstash
+    ports:
+      - "5044:5044"
+    volumes:
+      - ../observability/logstash/pipeline.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+    depends_on:
+      - elasticsearch
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.12.2
+    container_name: bowery_filebeat
+    user: root
+    volumes:
+      - ../observability/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      - logstash
+
+  prometheus:
+    image: prom/prometheus:v2.53.0
+    container_name: bowery_prometheus
+    volumes:
+      - ../observability/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "19090:9090"
+
+  grafana:
+    image: grafana/grafana:10.4.2
+    container_name: bowery_grafana
+    ports:
+      - "53000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../observability/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../../doc/grafana-dashboard.json:/var/lib/grafana/dashboards/agent-bowery.json:ro
+    depends_on:
+      - prometheus
+
+  api:
+    image: node:20-alpine
+    container_name: bowery_api
+    working_dir: /workspace/apps/api
+    command: sh -c "npm install && node scripts/run-migrations.js && node -r ts-node/register/transpile-only src/main.ts"
+    volumes:
+      - ../../:/workspace
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://bowery:bowery@postgres:5432/bowery
+      - REDIS_URL=redis://redis:6379
+      - ELASTICSEARCH_NODE=http://elasticsearch:9200
+      - PERPLEXITY_API_KEY=${PERPLEXITY_API_KEY}
+      - PERPLEXITY_BASE_URL=${PERPLEXITY_BASE_URL:-https://api.perplexity.ai}
+      - PERPLEXITY_MODEL=${PERPLEXITY_MODEL:-sonar-large-online}
+      - PORT=4000
+      - OAUTH_COOKIE_SECRET=devcookie
+      - OAUTH_REDIRECT_ALLOWLIST=http://localhost:43000,http://localhost:3000
+      - RL_WINDOW_SEC=60
+      - RL_MAX_RPM=60
+      - RL_BURST=20
+      - RL_ROUTE_OVERRIDES=[{"route":"/content/schedule","windowSec":60,"maxReq":20},{"route":"/posts/","windowSec":60,"maxReq":30}]
+      - API_KEYS=test-api-key,dev-key-123
+    ports:
+      - "44000:4000"
+    depends_on:
+      - postgres
+      - redis
+      - elasticsearch
+
+  worker:
+    image: node:20-alpine
+    container_name: bowery_worker
+    working_dir: /workspace/apps/worker
+    command: sh -c "npm install && npm run dev"
+    volumes:
+      - ../../:/workspace
+    environment:
+      - NODE_ENV=development
+      - DATABASE_URL=postgresql://bowery:bowery@postgres:5432/bowery
+      - REDIS_URL=redis://redis:6379
+      - ELASTICSEARCH_NODE=http://elasticsearch:9200
+
+  web:
+    image: node:20-alpine
+    container_name: bowery_web
+    working_dir: /workspace/apps/web
+    command: sh -c "npm install && npm run dev"
+    volumes:
+      - ../../:/workspace
+    environment:
+      - NODE_ENV=development
+      - API_BASE_URL=http://api:4000
+    ports:
+      - "43000:3000"
+    depends_on:
+      - api
+
+  seed:
+    image: postgres:15
+    container_name: bowery_seed
+    depends_on:
+      - postgres
+    environment:
+      - PGPASSWORD=bowery
+    volumes:
+      - ../../apps/api/scripts/seed.sql:/seed.sql:ro
+    entrypoint: ["bash","-lc","until pg_isready -h postgres -U bowery; do sleep 1; done; psql -h postgres -U bowery -d bowery -f /seed.sql"]
+
+volumes:
+  pgdata:
+  esdata:
+  grafana_data:

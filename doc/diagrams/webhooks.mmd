@@ -1,0 +1,20 @@
+sequenceDiagram
+  participant Provider as Provider (Meta/LinkedIn/Google)
+  participant API as API (NestJS)
+  participant Queue as BullMQ (webhook-jobs)
+  participant Worker as Worker (webhook)
+  participant DB as Postgres
+
+  Provider->>API: POST /webhooks/:provider (raw body)
+  API->>API: Verify HMAC signature
+  API->>API: Compute idempotency key (hash raw body + signature)
+  API->>DB: store webhook event {id, provider, idemKey, headers, raw}
+  API->>DB: mark idemKey processed
+  API->>Queue: enqueue webhook job {idemKey, provider}
+  API-->>Provider: 200 { ok: true }
+
+  Queue-->>Worker: deliver webhook job
+  Worker->>DB: fetch/process event(s) by idemKey
+  Worker-->>Queue: complete job
+
+

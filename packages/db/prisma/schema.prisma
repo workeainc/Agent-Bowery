@@ -1,0 +1,181 @@
+// datasource and generator
+ datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+ }
+
+ generator client {
+  provider = "prisma-client-js"
+ }
+
+ // Core entities
+ model Organization {
+  id            String   @id @default(cuid())
+  name          String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  users         UserOrganization[]
+  socialAccounts SocialAccount[]
+  contentItems  ContentItem[]
+  leads         Lead[]
+ }
+
+ model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  displayName   String
+  passwordHash  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  organizations UserOrganization[]
+ }
+
+ model UserOrganization {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String
+  role           String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  user           User        @relation(fields: [userId], references: [id])
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([userId, organizationId])
+ }
+
+ enum Platform {
+  FACEBOOK
+  INSTAGRAM
+  LINKEDIN
+  YOUTUBE
+  GBP
+  WORDPRESS
+  MAIL
+ }
+
+ model SocialAccount {
+  id             String   @id @default(cuid())
+  organizationId String
+  platform       Platform
+  externalId     String
+  displayName    String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  tokens       Token[]
+
+  @@unique([platform, externalId])
+ }
+
+ model Token {
+  id              String   @id @default(cuid())
+  socialAccountId String
+  accessTokenEnc  String
+  refreshTokenEnc String?
+  expiresAt       DateTime?
+  scopes          String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  socialAccount SocialAccount @relation(fields: [socialAccountId], references: [id])
+ }
+
+ enum ContentType {
+  BLOG
+  NEWSLETTER
+  SOCIAL
+ }
+
+ model ContentItem {
+  id             String      @id @default(cuid())
+  organizationId String
+  type           ContentType
+  title          String
+  slug           String?
+  status         String       // draft, approved, scheduled, published
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  versions       ContentVersion[]
+  schedules      Schedule[]
+ }
+
+ model ContentVersion {
+  id            String   @id @default(cuid())
+  contentItemId String
+  version       Int
+  body          String
+  metadataJson  Json
+  createdAt     DateTime @default(now())
+
+  contentItem ContentItem @relation(fields: [contentItemId], references: [id])
+
+  @@unique([contentItemId, version])
+ }
+
+ model Schedule {
+  id             String   @id @default(cuid())
+  contentItemId  String
+  platform       Platform
+  scheduledAt    DateTime
+  status         String   // pending, queued, published, failed
+  lastError      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  contentItem ContentItem @relation(fields: [contentItemId], references: [id])
+ }
+
+ model Lead {
+  id             String   @id @default(cuid())
+  organizationId String
+  source         String   // platform or form id
+  name           String?
+  email          String?
+  phone          String?
+  score          Int       @default(0)
+  status         String    @default("new")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+  conversations Conversation[]
+ }
+
+ model Conversation {
+  id        String   @id @default(cuid())
+  leadId    String
+  platform  Platform
+  externalId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lead    Lead      @relation(fields: [leadId], references: [id])
+  messages Message[]
+ }
+
+ model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  direction      String   // inbound/outbound
+  body           String
+  sentAt         DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id])
+ }
+
+ model AnalyticsDaily {
+  id             String   @id @default(cuid())
+  organizationId String
+  platform       Platform
+  date           DateTime
+  metric         String
+  value          Float
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+
+  @@unique([organizationId, platform, date, metric])
+ }

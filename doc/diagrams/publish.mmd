@@ -1,0 +1,31 @@
+sequenceDiagram
+  participant Web as Web (Next.js)
+  participant API as API (NestJS)
+  participant Queue as BullMQ (publish-jobs)
+  participant Worker as Worker (publish)
+  participant Redis as Redis
+  participant DB as Postgres
+  participant Provider as Platform API
+
+  Web->>API: POST /content/:id/schedule { platform, scheduledAt }
+  API->>DB: create Schedule (pending)
+  API->>Queue: enqueue publish job
+  API-->>Web: 200 { scheduleId }
+
+  Note over Worker,API: Additionally, Cron polls /content/schedules/due and enqueues jobs
+
+  Queue-->>Worker: deliver publish job
+  Worker->>Redis: get cached access token
+  alt token missing/near expiry
+    Worker->>DB: load latest token
+    Worker->>Provider: refresh if needed
+    Provider-->>Worker: new access_token
+    Worker->>Redis: cache access token
+  end
+  Worker->>DB: load content + current version
+  Worker->>Provider: publish (text/media)
+  Provider-->>Worker: providerId or error (429/401/...)
+  Worker->>DB: update Schedule status (published/failed, metadata)
+  Worker-->>Queue: complete job
+
+

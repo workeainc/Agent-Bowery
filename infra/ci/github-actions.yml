@@ -1,0 +1,72 @@
+name: ci
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  typecheck-api:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install API deps
+        working-directory: apps/api
+        run: npm ci || npm install
+      - name: Type Check API
+        working-directory: apps/api
+        run: npm run typecheck
+
+  test-api:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: bowery
+          POSTGRES_PASSWORD: bowery
+          POSTGRES_DB: bowery
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U bowery" --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install API deps
+        working-directory: apps/api
+        run: npm ci || npm install
+      - name: Run DB migrations
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://bowery:bowery@localhost:55432/bowery
+        run: node scripts/run-migrations.js
+      - name: Run Tests API
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://bowery:bowery@localhost:55432/bowery
+          REDIS_URL: redis://localhost:6379
+        run: npm test -- --ci
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+      - name: Install API deps
+        working-directory: apps/api
+        run: npm ci || npm install
+      - name: Lint (non-blocking)
+        working-directory: apps/api
+        run: npm run lint || echo "lint warnings ignored for now"

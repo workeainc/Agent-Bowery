@@ -1,0 +1,12 @@
+{
+  "name": "agent-bowery-worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "node worker.js"
+  },
+  "dependencies": {
+    "bullmq": "^5.7.11"
+  }
+}

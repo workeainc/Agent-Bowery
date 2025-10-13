@@ -1,0 +1,303 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "Agent Bowery - System Metrics",
+    "tags": ["agent-bowery", "monitoring"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Request Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{job=\"bowery-api\"}[5m])",
+            "legendFormat": "{{method}} {{endpoint}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "requests/sec"
+          }
+        ],
+        "xAxes": [
+          {
+            "type": "time"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "API Response Time",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{job=\"bowery-api\"}[5m]))",
+            "legendFormat": "95th percentile"
+          },
+          {
+            "expr": "histogram_quantile(0.50, rate(http_request_duration_seconds_bucket{job=\"bowery-api\"}[5m]))",
+            "legendFormat": "50th percentile"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "seconds"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      },
+      {
+        "id": 3,
+        "title": "Error Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(http_requests_total{job=\"bowery-api\",status=~\"5..\"}[5m])",
+            "legendFormat": "5xx errors"
+          },
+          {
+            "expr": "rate(http_requests_total{job=\"bowery-api\",status=\"429\"}[5m])",
+            "legendFormat": "Rate limited"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "errors/sec"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 8
+        }
+      },
+      {
+        "id": 4,
+        "title": "Queue Depth",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "bullmq_queue_waiting{job=\"bowery-worker\"}",
+            "legendFormat": "{{queue}} waiting"
+          },
+          {
+            "expr": "bullmq_queue_active{job=\"bowery-worker\"}",
+            "legendFormat": "{{queue}} active"
+          },
+          {
+            "expr": "bullmq_queue_failed{job=\"bowery-worker\"}",
+            "legendFormat": "{{queue}} failed"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "jobs"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 8
+        }
+      },
+      {
+        "id": 5,
+        "title": "Database Connections",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "pg_stat_database_numbackends{job=\"postgres\"}",
+            "legendFormat": "Active connections"
+          },
+          {
+            "expr": "pg_stat_database_max_connections{job=\"postgres\"}",
+            "legendFormat": "Max connections"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "connections"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 16
+        }
+      },
+      {
+        "id": 6,
+        "title": "Redis Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "redis_memory_used_bytes{job=\"redis\"}",
+            "legendFormat": "Used memory"
+          },
+          {
+            "expr": "redis_memory_max_bytes{job=\"redis\"}",
+            "legendFormat": "Max memory"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "bytes"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 16
+        }
+      },
+      {
+        "id": 7,
+        "title": "Container CPU Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(container_cpu_usage_seconds_total{name=~\"bowery-.*\"}[5m]) * 100",
+            "legendFormat": "{{name}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "CPU %"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 24
+        }
+      },
+      {
+        "id": 8,
+        "title": "Container Memory Usage",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "container_memory_usage_bytes{name=~\"bowery-.*\"}",
+            "legendFormat": "{{name}}"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "bytes"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 24
+        }
+      },
+      {
+        "id": 9,
+        "title": "Webhook Processing Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(webhook_events_processed_total{job=\"bowery-worker\"}[5m])",
+            "legendFormat": "{{platform}} webhooks/sec"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "events/sec"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 32
+        }
+      },
+      {
+        "id": 10,
+        "title": "Content Publishing Success Rate",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(content_published_total{job=\"bowery-worker\",status=\"success\"}[5m])",
+            "legendFormat": "Successful publishes"
+          },
+          {
+            "expr": "rate(content_published_total{job=\"bowery-worker\",status=\"failed\"}[5m])",
+            "legendFormat": "Failed publishes"
+          }
+        ],
+        "yAxes": [
+          {
+            "label": "publishes/sec"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 32
+        }
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s",
+    "schemaVersion": 27,
+    "version": 1,
+    "links": []
+  },
+  "alerts": [
+    {
+      "name": "High Error Rate",
+      "condition": "rate(http_requests_total{job=\"bowery-api\",status=~\"5..\"}[5m]) > 0.1",
+      "message": "API error rate is above 10%",
+      "severity": "warning"
+    },
+    {
+      "name": "Queue Backlog",
+      "condition": "bullmq_queue_waiting{job=\"bowery-worker\"} > 100",
+      "message": "Job queue has significant backlog",
+      "severity": "warning"
+    },
+    {
+      "name": "Database Connection Issues",
+      "condition": "pg_stat_database_numbackends{job=\"postgres\"} / pg_stat_database_max_connections{job=\"postgres\"} > 0.8",
+      "message": "Database connection pool is 80% full",
+      "severity": "critical"
+    },
+    {
+      "name": "Redis Memory High",
+      "condition": "redis_memory_used_bytes{job=\"redis\"} / redis_memory_max_bytes{job=\"redis\"} > 0.9",
+      "message": "Redis memory usage is above 90%",
+      "severity": "critical"
+    },
+    {
+      "name": "Container CPU High",
+      "condition": "rate(container_cpu_usage_seconds_total{name=~\"bowery-.*\"}[5m]) > 0.8",
+      "message": "Container CPU usage is above 80%",
+      "severity": "warning"
+    }
+  ]
+}
