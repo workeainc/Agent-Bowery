@@ -10,6 +10,8 @@ declare module 'next-auth' {
       role: UserRole;
       organizationId: string;
       permissions: Permission[];
+      createdAt?: string;
+      updatedAt?: string;
     };
   }
 
@@ -20,6 +22,8 @@ declare module 'next-auth' {
     role: UserRole;
     organizationId: string;
     permissions: Permission[];
+    createdAt?: string;
+    updatedAt?: string;
   }
 }
 

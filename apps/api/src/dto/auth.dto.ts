@@ -50,3 +50,5 @@ export class UpdateUserDto {
   @IsIn(['admin', 'editor', 'viewer'], { message: 'Role must be one of: admin, editor, viewer' })
   role?: 'admin' | 'editor' | 'viewer';
 }
+
+

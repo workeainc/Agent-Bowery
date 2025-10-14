@@ -70,3 +70,5 @@ VALUES (
     NOW(),
     NOW()
 ) ON CONFLICT (email) DO NOTHING;
+
+

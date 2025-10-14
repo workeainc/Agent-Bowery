@@ -16,6 +16,11 @@ export type Permission =
   | 'brand-rules:manage'
   | 'quality-policies:manage'
   | 'webhooks:manage'
+  | 'leads:view'
+  | 'leads:manage'
+  | 'leads:create'
+  | 'leads:edit'
+  | 'leads:delete'
   | 'admin:access';
 
 export interface User {
@@ -25,8 +30,8 @@ export interface User {
   role: UserRole;
   organizationId: string;
   permissions: Permission[];
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface AuthSession {
@@ -50,6 +55,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'brand-rules:manage',
     'quality-policies:manage',
     'webhooks:manage',
+    'leads:view',
+    'leads:manage',
+    'leads:create',
+    'leads:edit',
+    'leads:delete',
     'admin:access',
   ],
   editor: [
@@ -59,9 +69,14 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
     'content:approve',
     'analytics:view',
     'templates:manage',
+    'leads:view',
+    'leads:manage',
+    'leads:create',
+    'leads:edit',
   ],
   viewer: [
     'analytics:view',
+    'leads:view',
   ],
 };
 
@@ -89,3 +104,5 @@ export function hasRole(user: User, role: UserRole): boolean {
 export function hasAnyRole(user: User, roles: UserRole[]): boolean {
   return roles.includes(user.role);
 }
+
+

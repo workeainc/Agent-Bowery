@@ -15,7 +15,11 @@ import {
   GlobeAltIcon,
   DocumentIcon,
   BellIcon,
-  UserGroupIcon
+  UserGroupIcon,
+  SparklesIcon,
+  QueueListIcon,
+  ClockIcon,
+  ExclamationTriangleIcon
 } from '@heroicons/react/24/outline';
 import { Permission, hasPermission } from '@/types/auth';
 
@@ -42,6 +46,18 @@ const navigationItems: NavigationItem[] = [
     permissions: ['content:create', 'content:edit', 'analytics:view'],
   },
   {
+    name: 'AI Generate',
+    href: '/ai-generate',
+    icon: SparklesIcon,
+    permissions: ['content:create'],
+  },
+  {
+    name: 'Batch Generate',
+    href: '/batch-generate',
+    icon: SparklesIcon,
+    permissions: ['content:create'],
+  },
+  {
     name: 'Calendar',
     href: '/calendar',
     icon: CalendarIcon,
@@ -52,6 +68,12 @@ const navigationItems: NavigationItem[] = [
     href: '/inbox',
     icon: InboxIcon,
     permissions: ['content:create', 'content:edit'],
+  },
+  {
+    name: 'Leads',
+    href: '/leads',
+    icon: UsersIcon,
+    permissions: [],
   },
   {
     name: 'Analytics',
@@ -66,10 +88,118 @@ const navigationItems: NavigationItem[] = [
     permissions: ['platforms:manage'],
   },
   {
+    name: 'Platform Features',
+    href: '/platform-specific',
+    icon: GlobeAltIcon,
+    permissions: ['platforms:manage'],
+  },
+  {
+    name: 'Token Management',
+    href: '/tokens',
+    icon: ShieldCheckIcon,
+    permissions: ['platforms:manage'],
+  },
+  {
+    name: 'Webhook Management',
+    href: '/webhooks',
+    icon: BellIcon,
+    permissions: ['platforms:manage'],
+  },
+  {
+    name: 'Posts Testing',
+    href: '/posts-testing',
+    icon: CogIcon,
+    permissions: ['platforms:manage'],
+  },
+  {
+    name: 'Storage Management',
+    href: '/storage',
+    icon: DocumentIcon,
+    permissions: [],
+  },
+  {
+    name: 'Metrics & Monitoring',
+    href: '/metrics',
+    icon: ChartBarIcon,
+    permissions: ['admin:access'],
+  },
+  {
+    name: 'Error Management',
+    href: '/errors',
+    icon: ExclamationTriangleIcon,
+    permissions: ['admin:access'],
+  },
+  {
+    name: 'Media Processing',
+    href: '/media-processing',
+    icon: DocumentIcon,
+    permissions: ['admin:access'],
+  },
+  {
+    name: 'Jobs & Queue',
+    href: '/jobs',
+    icon: QueueListIcon,
+    permissions: ['admin:access'],
+  },
+  {
+    name: 'Auth Management',
+    href: '/auth-management',
+    icon: ShieldCheckIcon,
+    permissions: ['admin:access'],
+  },
+  {
+    name: 'Advanced Content',
+    href: '/advanced-content',
+    icon: DocumentTextIcon,
+    permissions: ['content:create', 'content:edit'],
+  },
+  {
+    name: 'AI & Analytics',
+    href: '/ai-analytics',
+    icon: ChartBarIcon,
+    permissions: ['content:create', 'content:edit', 'analytics:view'],
+  },
+  {
+    name: 'Workflow & Notifications',
+    href: '/workflow-notifications',
+    icon: BellIcon,
+    permissions: ['content:create', 'content:edit', 'admin:access'],
+  },
+  {
+    name: 'Advanced Scheduling',
+    href: '/advanced-scheduling',
+    icon: ClockIcon,
+    permissions: ['content:create', 'content:edit'],
+  },
+  {
+    name: 'Pipeline Monitoring',
+    href: '/pipeline-monitoring',
+    icon: CogIcon,
+    permissions: ['admin:access'],
+  },
+  {
+    name: 'Admin Advanced',
+    href: '/admin-advanced',
+    icon: CogIcon,
+    permissions: ['admin:access'],
+  },
+  {
+    name: 'Health & Monitoring',
+    href: '/health',
+    icon: CogIcon,
+    permissions: ['admin:access'],
+  },
+  {
     name: 'Templates',
     href: '/templates',
     icon: DocumentIcon,
     permissions: ['templates:manage'],
+  },
+  {
+    name: 'Brand Rules',
+    href: '/brand-rules',
+    icon: ShieldCheckIcon,
+    permissions: ['brand-rules:manage'],
   },
   {
     name: 'Users',
@@ -106,7 +236,7 @@ export function RoleBasedNavigation() {
     if (!item.permissions || item.permissions.length === 0) {
       return true; // No permission requirements, show to everyone
     }
-    
+
     // User needs at least one of the required permissions
     return item.permissions.some(permission => hasPermission(user, permission));
   });
@@ -169,6 +299,12 @@ export function QuickActions() {
       href: '/content/schedule',
       icon: CalendarIcon,
       permissions: ['content:publish'],
+    },
+    {
+      name: 'Manage Leads',
+      href: '/leads',
+      icon: UsersIcon,
+      permissions: ['leads:view', 'leads:manage'],
     },
     {
       name: 'View Analytics',

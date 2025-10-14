@@ -267,3 +267,5 @@ export class AuthService {
 
 // Export singleton instance
 export const authService = AuthService.getInstance();
+
+
