@@ -32,7 +32,7 @@ export class PerplexityService {
       timeout: 30000,
       headers: this.apiKey ? { Authorization: `Bearer ${this.apiKey}` } : undefined,
     });
-    this.redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+    this.redis = new Redis(process.env.REDIS_URL || 'redis://localhost:56379');
   }
 
   private dateBucket(): string {
